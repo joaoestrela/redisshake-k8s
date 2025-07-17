@@ -1,0 +1,8 @@
+# Chart dependencies
+/charts/*/charts
+.idea
+.vscode
+.cursor
+.DS_Store
+*.tgz
+example-values.yaml
