@@ -28,11 +28,11 @@ RedisShake is a tool for Redis data migration and synchronization. It supports m
 ## Installation
 
 ```bash
-# Add the repository
-helm repo add redisshake https://your-repo-url
+# Add the OCI registry (Might be needed depending on your setup)
+helm registry login ghcr.io
 
 # Install the chart
-helm install my-redisshake redisshake/redisshake
+helm install my-redisshake oci://ghcr.io/joaoestrela/redisshake-k8s/helm-charts/redisshake --version 0.1.0
 ```
 
 ## Values
