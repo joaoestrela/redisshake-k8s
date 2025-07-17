@@ -14,7 +14,6 @@ sources:
   - https://github.com/alibaba/RedisShake
   - https://tair-opensource.github.io/RedisShake/
 maintainers:
-  - name: João Estrela
+  - name: joaoestrela
     email: jestrela.galaxy@gmail.com
     url: https://github.com/joaoestrela
-
