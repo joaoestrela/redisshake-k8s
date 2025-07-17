@@ -1,0 +1,55 @@
+RedisShake has been deployed successfully!
+
+{{- if .Values.reader.sync.enabled }}
+**Sync Mode Configuration:**
+{{- if .Values.reader.sync.secret.enabled }}
+- Source Redis: From secret "{{ .Values.reader.sync.secret.name }}" (via SHAKE_SRC_ADDRESS)
+- Target Redis: From secret "{{ .Values.writer.redis.secret.name }}" (via SHAKE_DST_ADDRESS)
+{{- else }}
+- Source Redis: {{ .Values.reader.sync.address }} (via SHAKE_SRC_ADDRESS)
+- Target Redis: {{ .Values.writer.redis.address }} (via SHAKE_DST_ADDRESS)
+{{- end }}
+- RDB Sync: {{ .Values.reader.sync.sync_rdb }}
+- AOF Sync: {{ .Values.reader.sync.sync_aof }}
+{{- end }}
+
+{{- if .Values.reader.scan.enabled }}
+**Scan Mode Configuration:**
+{{- if .Values.reader.scan.secret.enabled }}
+- Source Redis: From secret "{{ .Values.reader.scan.secret.name }}" (via SHAKE_SRC_ADDRESS)
+- Target Redis: From secret "{{ .Values.writer.redis.secret.name }}" (via SHAKE_DST_ADDRESS)
+{{- else }}
+- Source Redis: {{ .Values.reader.scan.address }} (via SHAKE_SRC_ADDRESS)
+- Target Redis: {{ .Values.writer.redis.address }} (via SHAKE_DST_ADDRESS)
+{{- end }}
+- Scan Databases: {{ .Values.reader.scan.dbs }}
+{{- end }}
+
+{{- if .Values.reader.rdb.enabled }}
+**RDB Restore Mode Configuration:**
+- RDB File: {{ .Values.reader.rdb.filepath }}
+- Target Redis: {{ .Values.writer.redis.address }}
+{{- end }}
+
+{{- if .Values.reader.aof.enabled }}
+**AOF Restore Mode Configuration:**
+- AOF File: {{ .Values.reader.aof.filepath }}
+- Target Redis: {{ .Values.writer.redis.address }}
+{{- end }}
+
+**Service Access:**
+{{- if .Values.service.enabled }}
+{{- if .Values.advanced.status.enabled }}
+- Status endpoint: http://{{ include "redisshake.fullname" . }}:{{ .Values.advanced.status.port }}
+{{- end }}
+{{- if .Values.advanced.pprof.enabled }}
+- PProf endpoint: http://{{ include "redisshake.fullname" . }}:{{ .Values.advanced.pprof.port }}
+{{- end }}
+{{- else }}
+Service is disabled. To enable, set service.enabled=true in values.yaml
+{{- end }}
+
+**Configuration:**
+- Mode: {{ .Values.mode }}
+- Log Level: {{ .Values.advanced.log_level }}
+- Data Directory: {{ .Values.advanced.dir }}

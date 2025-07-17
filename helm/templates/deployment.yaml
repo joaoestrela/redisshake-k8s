@@ -1,0 +1,288 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "redisshake.fullname" . }}
+  labels:
+    {{- include "redisshake.labels" . | nindent 4 }}
+  {{- with .Values.deployment.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "redisshake.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "redisshake.selectorLabels" . | nindent 8 }}
+      {{- with .Values.deployment.podLabels }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.deployment.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ include "redisshake.serviceAccountName" . }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.deployment.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.deployment.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["./redis-shake"]
+          args: ["/app/shake.toml"]
+          env:
+            {{- if eq .Values.mode "sync" }}
+            - name: SYNC
+              value: "true"
+            {{- else if eq .Values.mode "scan" }}
+            - name: SCAN
+              value: "true"
+            {{- end }}
+            {{- if eq .Values.mode "sync" }}
+            {{- if not .Values.reader.sync.enabled }}
+            {{- fail "Sync mode requires reader.sync.enabled to be true" }}
+            {{- end }}
+            {{- if and .Values.reader.sync.secret.enabled .Values.reader.sync.secret.hostKey .Values.reader.sync.secret.portKey }}
+            - name: SHAKE_SRC_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.sync.secret.name }}
+                  key: {{ .Values.reader.sync.secret.hostKey }}
+            - name: SHAKE_SRC_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.sync.secret.name }}
+                  key: {{ .Values.reader.sync.secret.portKey }}
+            {{- else if and .Values.reader.sync.secret.enabled .Values.reader.sync.secret.addressKey }}
+            - name: SHAKE_SRC_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.sync.secret.name }}
+                  key: {{ .Values.reader.sync.secret.addressKey }}
+            {{- else }}
+            - name: SHAKE_SRC_ADDRESS
+              value: "{{ .Values.reader.sync.address }}"
+            {{- end }}
+            {{- if and .Values.reader.sync.secret.enabled .Values.reader.sync.secret.usernameKey }}
+            - name: SHAKE_SRC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.sync.secret.name }}
+                  key: {{ .Values.reader.sync.secret.usernameKey }}
+            {{- else }}
+            - name: SHAKE_SRC_USERNAME
+              value: "{{ .Values.reader.sync.username }}"
+            {{- end }}
+            {{- if .Values.reader.sync.secret.enabled }}
+            - name: SHAKE_SRC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.sync.secret.name }}
+                  key: {{ .Values.reader.sync.secret.passwordKey }}
+            {{- else if .Values.secret.enabled }}
+            - name: SHAKE_SRC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "redisshake.fullname" . }}-secret
+                  key: source-password
+            {{- else }}
+            - name: SHAKE_SRC_PASSWORD
+              value: ""
+            {{- end }}
+            {{- else if eq .Values.mode "scan" }}
+            {{- if not .Values.reader.scan.enabled }}
+            {{- fail "Scan mode requires reader.scan.enabled to be true" }}
+            {{- end }}
+            {{- if and .Values.reader.scan.secret.enabled .Values.reader.scan.secret.hostKey .Values.reader.scan.secret.portKey }}
+            - name: SHAKE_SRC_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.scan.secret.name }}
+                  key: {{ .Values.reader.scan.secret.hostKey }}
+            - name: SHAKE_SRC_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.scan.secret.name }}
+                  key: {{ .Values.reader.scan.secret.portKey }}
+            {{- else if and .Values.reader.scan.secret.enabled .Values.reader.scan.secret.addressKey }}
+            - name: SHAKE_SRC_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.scan.secret.name }}
+                  key: {{ .Values.reader.scan.secret.addressKey }}
+            {{- else }}
+            - name: SHAKE_SRC_ADDRESS
+              value: "{{ .Values.reader.scan.address }}"
+            {{- end }}
+            {{- if and .Values.reader.scan.secret.enabled .Values.reader.scan.secret.usernameKey }}
+            - name: SHAKE_SRC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.scan.secret.name }}
+                  key: {{ .Values.reader.scan.secret.usernameKey }}
+            {{- else }}
+            - name: SHAKE_SRC_USERNAME
+              value: "{{ .Values.reader.scan.username }}"
+            {{- end }}
+            {{- if .Values.reader.scan.secret.enabled }}
+            - name: SHAKE_SRC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.reader.scan.secret.name }}
+                  key: {{ .Values.reader.scan.secret.passwordKey }}
+            {{- else if .Values.secret.enabled }}
+            - name: SHAKE_SRC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "redisshake.fullname" . }}-secret
+                  key: source-password
+            {{- else }}
+            - name: SHAKE_SRC_PASSWORD
+              value: ""
+            {{- end }}
+            {{- end }}
+            {{- if .Values.writer.redis.enabled }}
+            {{- if and .Values.writer.redis.secret.enabled .Values.writer.redis.secret.hostKey .Values.writer.redis.secret.portKey }}
+            - name: SHAKE_DST_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.writer.redis.secret.name }}
+                  key: {{ .Values.writer.redis.secret.hostKey }}
+            - name: SHAKE_DST_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.writer.redis.secret.name }}
+                  key: {{ .Values.writer.redis.secret.portKey }}
+            {{- else if and .Values.writer.redis.secret.enabled .Values.writer.redis.secret.addressKey }}
+            - name: SHAKE_DST_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.writer.redis.secret.name }}
+                  key: {{ .Values.writer.redis.secret.addressKey }}
+            {{- else }}
+            - name: SHAKE_DST_ADDRESS
+              value: "{{ .Values.writer.redis.address }}"
+            {{- end }}
+            {{- if and .Values.writer.redis.secret.enabled .Values.writer.redis.secret.usernameKey }}
+            - name: SHAKE_DST_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.writer.redis.secret.name }}
+                  key: {{ .Values.writer.redis.secret.usernameKey }}
+            {{- else }}
+            - name: SHAKE_DST_USERNAME
+              value: "{{ .Values.writer.redis.username }}"
+            {{- end }}
+            {{- if .Values.writer.redis.secret.enabled }}
+            - name: SHAKE_DST_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.writer.redis.secret.name }}
+                  key: {{ .Values.writer.redis.secret.passwordKey }}
+            {{- else if .Values.secret.enabled }}
+            - name: SHAKE_DST_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "redisshake.fullname" . }}-secret
+                  key: target-password
+            {{- else }}
+            - name: SHAKE_DST_PASSWORD
+              value: ""
+            {{- end }}
+            {{- end }}
+          ports:
+            {{- if .Values.advanced.status.enabled }}
+            - name: status
+              containerPort: {{ .Values.advanced.status.port }}
+              protocol: TCP
+            {{- end }}
+            {{- if .Values.advanced.pprof.enabled }}
+            - name: pprof
+              containerPort: {{ .Values.advanced.pprof.port }}
+              protocol: TCP
+            {{- end }}
+          {{- if .Values.advanced.status.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: status
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: status
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          {{- end }}
+          resources:
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/shake.toml
+              subPath: shake.toml
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: /app/{{ .Values.advanced.dir }}
+            {{- end }}
+            {{- if .Values.reader.rdb.enabled }}
+            - name: rdb-file
+              mountPath: {{ dir .Values.reader.rdb.filepath }}
+              subPath: {{ base .Values.reader.rdb.filepath }}
+            {{- end }}
+            {{- if .Values.reader.aof.enabled }}
+            - name: aof-file
+              mountPath: {{ dir .Values.reader.aof.filepath }}
+              subPath: {{ base .Values.reader.aof.filepath }}
+            {{- end }}
+            {{- if .Values.writer.file.enabled }}
+            - name: output-file
+              mountPath: {{ dir .Values.writer.file.filepath }}
+              subPath: {{ base .Values.writer.file.filepath }}
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "redisshake.fullname" . }}-config
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "redisshake.fullname" . }}-data
+        {{- end }}
+        {{- if .Values.reader.rdb.enabled }}
+        - name: rdb-file
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.reader.aof.enabled }}
+        - name: aof-file
+          emptyDir: {}
+        {{- end }}
+                {{- if .Values.writer.file.enabled }}
+        - name: output-file
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

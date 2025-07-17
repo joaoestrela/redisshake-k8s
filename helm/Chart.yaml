@@ -1,0 +1,20 @@
+apiVersion: v2
+name: redisshake
+description: A Helm chart for RedisShake - Redis data migration and synchronization tool
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - redis
+  - migration
+  - sync
+  - replication
+home: https://github.com/joaoestrela/redis-shake-k8s
+sources:
+  - https://github.com/alibaba/RedisShake
+  - https://tair-opensource.github.io/RedisShake/
+maintainers:
+  - name: João Estrela
+    email: jestrela.galaxy@gmail.com
+    url: https://github.com/joaoestrela
+

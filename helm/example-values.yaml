@@ -1,0 +1,13 @@
+# Example values for redisshake
+# This demonstrates sync mode with redis-0 as source and redis-1 as target
+
+mode: sync
+reader:
+  sync:
+    enabled: true
+    address: "redis-0:6379"
+
+writer:
+  redis:
+    enabled: true
+    address: "redis-1:6379"

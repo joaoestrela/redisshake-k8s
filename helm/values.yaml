@@ -1,0 +1,316 @@
+# Default values for redisshake
+# This is a YAML-formatted file.
+
+# RedisShake image configuration
+image:
+  # -- RedisShake image repository
+  repository: ghcr.io/tair-opensource/redisshake
+  # -- RedisShake image tag
+  tag: latest
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+
+# -- Number of RedisShake replicas to deploy
+replicaCount: 1
+
+# -- RedisShake operation mode (sync, scan, restore, dump, decode)
+mode: sync
+
+# Reader configuration - choose one mode
+reader:
+  # Sync reader configuration (for sync mode)
+  sync:
+    # -- Enable the sync reader
+    enabled: true
+    # -- Set to true if the source is a Redis cluster
+    cluster: false
+    # -- Enable TLS for the source connection
+    tls: false
+    # -- Sync RDB data from source
+    sync_rdb: true
+    # -- Sync AOF data from source
+    sync_aof: true
+    # -- Prefer replica for sync (useful for reducing load on master)
+    prefer_replica: false
+    # -- Try diskless sync if source has repl-diskless-sync=yes
+    try_diskless: false
+
+    # -- Source Redis address (for clusters, specify any cluster node address)
+    address: "127.0.0.1:6379"
+    # -- Source Redis username (keep empty if ACL is not in use)
+    username: ""
+
+    # Secret reference for source Redis credentials (optional)
+    # If enabled, these values will override the direct values above
+    secret:
+      # -- Enable secret reference for source Redis
+      enabled: false
+      # -- Name of existing secret containing source Redis credentials
+      name: ""
+      # -- Key in secret containing the full address (host:port)
+      addressKey: "address"
+      # -- Key in secret containing just the host (alternative to addressKey)
+      hostKey: ""
+      # -- Key in secret containing just the port (alternative to addressKey)
+      portKey: ""
+      # -- Key in secret containing the username
+      usernameKey: "username"
+      # -- Key in secret containing the password (REQUIRED)
+      passwordKey: "password"
+
+  # Scan reader configuration (for scan mode)
+  scan:
+    # -- Enable the scan reader
+    enabled: false
+    # -- Set to true if source is a Redis cluster
+    cluster: false
+    # -- Enable TLS for the source connection
+    tls: false
+    # -- Specific databases to scan (e.g., [1,5,7]), leave empty to scan all
+    dbs: []
+    # -- Enable key scanning
+    scan: true
+    # -- Enable Redis keyspace notifications (KSN) subscription
+    ksn: false
+    # -- Number of keys to scan per iteration
+    count: 1
+
+    # -- Source Redis address (when cluster is true, set address to one of the cluster nodes)
+    address: "127.0.0.1:6379"
+    # -- Source Redis username (keep empty if not using ACL)
+    username: ""
+
+    # Secret reference for source Redis credentials (optional)
+    # If enabled, these values will override the direct values above
+    secret:
+      # -- Enable secret reference for source Redis
+      enabled: false
+      # -- Name of existing secret containing source Redis credentials
+      name: ""
+      # -- Key in secret containing the full address (host:port)
+      addressKey: "address"
+      # -- Key in secret containing just the host (alternative to addressKey)
+      hostKey: ""
+      # -- Key in secret containing just the port (alternative to addressKey)
+      portKey: ""
+      # -- Key in secret containing the username
+      usernameKey: "username"
+      # -- Key in secret containing the password (REQUIRED)
+      passwordKey: "password"
+
+  # RDB reader configuration (for restore mode)
+  rdb:
+    # -- Enable the RDB reader
+    enabled: false
+    # -- Path to the RDB file
+    filepath: "/tmp/dump.rdb"
+
+  # AOF reader configuration (for restore mode)
+  aof:
+    # -- Enable the AOF reader
+    enabled: false
+    # -- Path to the AOF file
+    filepath: "/tmp/.aof"
+    # -- Timestamp for AOF (subsecond)
+    timestamp: 0
+
+# Writer configuration - choose one mode
+writer:
+  # Redis writer configuration
+  redis:
+    # -- Enable the Redis writer
+    enabled: true
+    # -- Set to true if target is a Redis cluster
+    cluster: false
+    # -- Enable TLS for the target connection
+    tls: false
+    # -- Turn off the server reply
+    off_reply: false
+    # -- Target Redis address (when cluster is true, set address to one of the cluster nodes)
+    address: "127.0.0.1:6380"
+    # -- Target Redis username (keep empty if not using ACL)
+    username: ""
+    # Secret reference for target Redis credentials (optional)
+    secret:
+      # -- Enable secret reference for target Redis
+      enabled: false
+      # -- Name of existing secret containing target Redis credentials
+      name: ""
+      # -- Key in secret containing the full address (host:port)
+      addressKey: "address"
+      # -- Key in secret containing just the host (alternative to addressKey)
+      hostKey: ""
+      # -- Key in secret containing just the port (alternative to addressKey)
+      portKey: ""
+      # -- Key in secret containing the username
+      usernameKey: "username"
+      # -- Key in secret containing the password (REQUIRED)
+      passwordKey: "password"
+  # File writer configuration
+  file:
+    # -- Enable the file writer
+    enabled: false
+    # -- Output file path
+    filepath: "/tmp/cmd.txt"
+    # -- Output format: cmd, aof, json (default cmd)
+    type: "cmd"
+
+# Filter configuration
+filter:
+  # -- Allow only specific keys
+  allow_keys: []
+  # -- Allow keys with specific prefixes
+  allow_key_prefix: []
+  # -- Allow keys with specific suffixes
+  allow_key_suffix: []
+  # -- Allow keys matching regex patterns
+  allow_key_regex: []
+  # -- Block specific keys
+  block_keys: []
+  # -- Block keys with specific prefixes
+  block_key_prefix: []
+  # -- Block keys with specific suffixes
+  block_key_suffix: []
+  # -- Block keys matching regex patterns
+  block_key_regex: []
+  # -- Allow only specific database numbers
+  allow_db: []
+  # -- Block specific database numbers
+  block_db: []
+  # -- Allow only specific commands
+  allow_command: []
+  # -- Block specific commands
+  block_command: []
+  # -- Allow only specific command groups
+  allow_command_group: []
+  # -- Block specific command groups
+  block_command_group: []
+  # -- Lua function for custom filtering
+  function: ""
+
+# Advanced configuration
+advanced:
+  # -- Data directory
+  dir: "data"
+  # -- Number of CPU cores to use (0 = auto)
+  ncpu: 0
+  # PProf debugging configuration
+  pprof:
+    # -- Enable PProf debugging
+    enabled: false
+    # -- PProf port when enabled
+    port: 6060
+  # Status monitoring configuration
+  status:
+    # -- Enable status monitoring
+    enabled: true
+    # -- Status port when enabled
+    port: 8080
+  # -- Log file name
+  log_file: "shake.log"
+  # -- Log level (debug, info, warn)
+  log_level: "info"
+  # -- Log interval in seconds
+  log_interval: 5
+  # -- Enable log rotation
+  log_rotation: true
+  # -- Max log size in MiB
+  log_max_size: 512
+  # -- Log retention in days
+  log_max_age: 7
+  # -- Number of log backups
+  log_max_backups: 3
+  # -- Compress rotated logs
+  log_compress: true
+  # -- RDB restore command behavior (panic, rewrite, skip)
+  rdb_restore_command_behavior: "panic"
+  # -- Pipeline size
+  pipeline_count_limit: 1024
+  # -- Max query buffer length for target Redis client (bytes)
+  target_redis_client_max_querybuf_len: 1073741824
+  # -- Max bulk length for target Redis protocol (bytes)
+  target_redis_proto_max_bulk_len: 512000000
+  # -- Custom psync command for AWS ElastiCache
+  aws_psync: ""
+  # -- Clear target before sync
+  empty_db_before_sync: false
+
+# Module configuration
+module:
+  # -- Bloom filter version
+  target_mbbloom_version: 20603
+
+# Deployment configuration
+deployment:
+  # -- Additional annotations for the deployment
+  annotations: {}
+  # -- Additional labels for the deployment
+  labels: {}
+  # -- Additional pod annotations
+  podAnnotations: {}
+  # -- Additional pod labels
+  podLabels: {}
+  # -- Pod security context
+  podSecurityContext: {}
+  # -- Container security context
+  securityContext: {}
+  # -- Resource limits and requests
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Service configuration
+service:
+  # -- Enable service
+  enabled: true
+  # -- Service type
+  type: ClusterIP
+  # -- Additional service annotations
+  annotations: {}
+
+# ServiceAccount configuration
+serviceAccount:
+  # -- Enable service account
+  enabled: false
+  # -- Create service account
+  create: true
+  # -- Additional service account annotations
+  annotations: {}
+  # -- Service account name
+  name: ""
+
+# Secret configuration for sensitive data
+secret:
+  # -- Enable chart-managed secret
+  enabled: false
+  # -- Name of the chart-managed secret
+  name: "redisshake-secret"
+  # -- Source Redis password (will be stored in Kubernetes secret)
+  sourcePassword: ""
+  # -- Target Redis password (will be stored in Kubernetes secret)
+  targetPassword: ""
+
+# Persistence configuration
+persistence:
+  # -- Enable persistence
+  enabled: false
+  # -- Storage class for persistent volume
+  storageClass: ""
+  # -- Access mode for persistent volume
+  accessMode: ReadWriteOnce
+  # -- Size of persistent volume
+  size: 1Gi
+
+# -- Pod scheduling configuration
+# -- Node selector for pod placement
+nodeSelector: {}
+# -- Pod affinity rules
+affinity: {}
+# -- Pod tolerations
+tolerations: []
+# -- Kubernetes image pull secrets
+imagePullSecrets: []

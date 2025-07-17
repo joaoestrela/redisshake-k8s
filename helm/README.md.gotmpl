@@ -1,0 +1,183 @@
+# RedisShake Helm Chart
+
+> Chart version: `0.1.0` &nbsp;|&nbsp; App version: `latest`
+> [Chart Source](https://github.com/joaoestrela/redisshake-k8s) &nbsp;|&nbsp; [RedisShake Project](https://github.com/alibaba/RedisShake) &nbsp;|&nbsp; [RedisShake Docs](https://tair-opensource.github.io/RedisShake/)
+
+## Table of Contents
+- [Introduction](#introduction)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Values](#values)
+- [Usage Examples](#usage-examples)
+- [Monitoring & Troubleshooting](#monitoring--troubleshooting)
+
+A Helm chart for deploying RedisShake, a Redis data migration and synchronization tool.
+
+## Introduction
+
+RedisShake is a tool for Redis data migration and synchronization. It supports multiple modes:
+- **Sync**: Real-time synchronization from source to target Redis
+- **Scan**: Scan and migrate existing data
+
+## Prerequisites
+
+- Kubernetes 1.19+
+- Helm 3.0+
+- Redis instances (source and/or target)
+
+## Installation
+
+```bash
+# Add the repository
+helm repo add redisshake https://your-repo-url
+
+# Install the chart
+helm install my-redisshake redisshake/redisshake
+```
+
+{{ template "chart.valuesSection" . }}
+
+## Usage Examples
+
+### Basic Sync Mode
+```yaml
+mode: sync
+reader:
+  sync:
+    enabled: true
+    address: "source-redis:6379"
+    password: "source-pass"  # Set as SHAKE_SRC_PASSWORD env var
+writer:
+  redis:
+    enabled: true
+    address: "target-redis:6379"
+    password: "target-pass"  # Set as SHAKE_DST_PASSWORD env var
+```
+
+### Scan Mode with Filtering
+```yaml
+mode: scan
+reader:
+  scan:
+    enabled: true
+    address: "source-redis:6379"
+    dbs: [0, 1]
+    count: 1000
+writer:
+  redis:
+    enabled: true
+    address: "target-redis:6379"
+filter:
+  allow_key_prefix: ["user:", "product:"]
+  block_key_suffix: [":tmp"]
+```
+
+### Restore from RDB
+```yaml
+mode: restore
+reader:
+  rdb:
+    enabled: true
+    filepath: "/data/dump.rdb"
+writer:
+  redis:
+    enabled: true
+    address: "target-redis:6379"
+```
+
+### Dump to File
+```yaml
+mode: dump
+reader:
+  sync:
+    enabled: true
+    address: "source-redis:6379"
+writer:
+  file:
+    enabled: true
+    filepath: "/data/dump.txt"
+    type: "cmd"
+```
+
+### Using Existing Secrets
+```yaml
+mode: sync
+reader:
+  sync:
+    enabled: true
+    secret:
+      enabled: true
+      name: "source-redis-credentials"
+      addressKey: "redis-host"
+      usernameKey: "redis-user"
+      passwordKey: "redis-pass"
+writer:
+  redis:
+    enabled: true
+    secret:
+      enabled: true
+      name: "target-redis-credentials"
+      addressKey: "redis-host"
+      usernameKey: "redis-user"
+      passwordKey: "redis-pass"
+```
+
+### Using Separate Host and Port Keys
+```yaml
+mode: sync
+reader:
+  sync:
+    enabled: true
+    secret:
+      enabled: true
+      name: "source-redis-credentials"
+      hostKey: "redis-host"        # Separate host key
+      portKey: "redis-port"        # Separate port key
+      usernameKey: "redis-user"
+      passwordKey: "redis-pass"
+writer:
+  redis:
+    enabled: true
+    secret:
+      enabled: true
+      name: "target-redis-credentials"
+      hostKey: "redis-host"        # Separate host key
+      portKey: "redis-port"        # Separate port key
+      usernameKey: "redis-user"
+      passwordKey: "redis-pass"
+```
+
+## Monitoring & Troubleshooting
+
+### Status Endpoint
+When `advanced.status.enabled` is set to true, RedisShake provides a status endpoint:
+```bash
+kubectl port-forward deployment/my-redisshake 8080:8080
+curl http://localhost:8080
+```
+
+### PProf Debugging
+When `advanced.pprof.enabled` is set to true, RedisShake provides PProf debugging:
+```bash
+kubectl port-forward deployment/my-redisshake 6060:6060
+go tool pprof http://localhost:6060/debug/pprof/heap
+```
+
+### Logs
+```bash
+kubectl logs -f deployment/my-redisshake
+```
+
+### Common Issues
+
+1. **Connection refused**: Check Redis addresses and network connectivity
+2. **Authentication failed**: Verify Redis passwords and ACL settings
+3. **Permission denied**: Check file permissions for RDB/AOF files
+4. **Memory issues**: Adjust `pipeline_count_limit` and buffer sizes
+
+### Debug Mode
+Enable debug logging:
+```yaml
+advanced:
+  log_level: "debug"
+```

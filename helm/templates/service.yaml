@@ -1,0 +1,29 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "redisshake.fullname" . }}
+  labels:
+    {{- include "redisshake.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    {{- if .Values.advanced.status.enabled }}
+    - name: status
+      port: {{ .Values.advanced.status.port }}
+      targetPort: status
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.advanced.pprof.enabled }}
+    - name: pprof
+      port: {{ .Values.advanced.pprof.port }}
+      targetPort: pprof
+      protocol: TCP
+    {{- end }}
+  selector:
+    {{- include "redisshake.selectorLabels" . | nindent 4 }}
+{{- end }}
