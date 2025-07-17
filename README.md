@@ -1,6 +1,6 @@
-# RedisShake Kubernetes
+# RedisShake on Kubernetes
 
-A production-ready Helm chart for deploying [RedisShake](https://github.com/alibaba/RedisShake) on Kubernetes. RedisShake is a powerful tool for Redis data migration and synchronization.
+Repository dedicated for how to run [RedisShake](https://github.com/alibaba/RedisShake) on Kubernetes. RedisShake is a powerful tool for Redis data migration and synchronization.
 
 ## Documentation
 - [RedisShake Project](https://github.com/alibaba/RedisShake)
