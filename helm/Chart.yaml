@@ -2,7 +2,7 @@ apiVersion: v2
 name: redisshake
 description: A Helm chart for RedisShake - Redis data migration and synchronization tool
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "latest"
 keywords:
   - redis

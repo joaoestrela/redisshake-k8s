@@ -98,7 +98,7 @@ helm install my-redisshake oci://ghcr.io/joaoestrela/redisshake-k8s/helm-charts/
 | reader.aof.timestamp | int | `0` | Timestamp for AOF (subsecond) |
 | reader.rdb.enabled | bool | `false` | Enable the RDB reader |
 | reader.rdb.filepath | string | `"/tmp/dump.rdb"` | Path to the RDB file |
-| reader.scan.address | string | `"127.0.0.1:6379"` | Source Redis address (when cluster is true, set address to one of the cluster nodes) |
+| reader.scan.address | string | `"source-redis:6379"` | Source Redis address (when cluster is true, set address to one of the cluster nodes) |
 | reader.scan.cluster | bool | `false` | Set to true if source is a Redis cluster |
 | reader.scan.count | int | `1` | Number of keys to scan per iteration |
 | reader.scan.dbs | list | `[]` | Specific databases to scan (e.g., [1,5,7]), leave empty to scan all |
@@ -114,7 +114,7 @@ helm install my-redisshake oci://ghcr.io/joaoestrela/redisshake-k8s/helm-charts/
 | reader.scan.secret.usernameKey | string | `"username"` | Key in secret containing the username |
 | reader.scan.tls | bool | `false` | Enable TLS for the source connection |
 | reader.scan.username | string | `""` | Source Redis username (keep empty if not using ACL) |
-| reader.sync.address | string | `"127.0.0.1:6379"` | Source Redis address (for clusters, specify any cluster node address) |
+| reader.sync.address | string | `"source-redis:6379"` | Source Redis address (for clusters, specify any cluster node address) |
 | reader.sync.cluster | bool | `false` | Set to true if the source is a Redis cluster |
 | reader.sync.enabled | bool | `true` | Enable the sync reader |
 | reader.sync.prefer_replica | bool | `false` | Prefer replica for sync (useful for reducing load on master) |
@@ -146,7 +146,7 @@ helm install my-redisshake oci://ghcr.io/joaoestrela/redisshake-k8s/helm-charts/
 | writer.file.enabled | bool | `false` | Enable the file writer |
 | writer.file.filepath | string | `"/tmp/cmd.txt"` | Output file path |
 | writer.file.type | string | `"cmd"` | Output format: cmd, aof, json (default cmd) |
-| writer.redis.address | string | `"127.0.0.1:6380"` | Target Redis address (when cluster is true, set address to one of the cluster nodes) |
+| writer.redis.address | string | `"target-redis:6379"` | Target Redis address (when cluster is true, set address to one of the cluster nodes) |
 | writer.redis.cluster | bool | `false` | Set to true if target is a Redis cluster |
 | writer.redis.enabled | bool | `true` | Enable the Redis writer |
 | writer.redis.off_reply | bool | `false` | Turn off the server reply |

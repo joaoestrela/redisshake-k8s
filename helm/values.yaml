@@ -36,7 +36,7 @@ reader:
     try_diskless: false
 
     # -- Source Redis address (for clusters, specify any cluster node address)
-    address: "127.0.0.1:6379"
+    address: "source-redis:6379"
     # -- Source Redis username (keep empty if ACL is not in use)
     username: ""
 
@@ -76,7 +76,7 @@ reader:
     count: 1
 
     # -- Source Redis address (when cluster is true, set address to one of the cluster nodes)
-    address: "127.0.0.1:6379"
+    address: "source-redis:6379"
     # -- Source Redis username (keep empty if not using ACL)
     username: ""
 
@@ -127,7 +127,7 @@ writer:
     # -- Turn off the server reply
     off_reply: false
     # -- Target Redis address (when cluster is true, set address to one of the cluster nodes)
-    address: "127.0.0.1:6380"
+    address: "target-redis:6379"
     # -- Target Redis username (keep empty if not using ACL)
     username: ""
     # Secret reference for target Redis credentials (optional)
