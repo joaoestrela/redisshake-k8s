@@ -6,3 +6,4 @@
 .DS_Store
 *.tgz
 example-values.yaml
+.env
